@@ -1,0 +1,18 @@
+Fig4 oral/peduncle 31s windows for full 30 min (0-20 no-stim + 20-30 stim)
+Window rule: 31 s each, with event aligned at segment second 1 (stim onset or virtual onset).
+FPS: 16.67, seg_frames: 517, pre_frames: 17
+Total segments: 171
+Total rows: 88407
+Segments by type:
+SegmentType
+no_stim    114
+stim        57
+
+Segments by Hydra and type:
+HydraID  SegmentType
+Hydra1   no_stim        38
+         stim           19
+Hydra2   no_stim        38
+         stim           19
+Hydra3   no_stim        38
+         stim           19

@@ -1,0 +1,10 @@
+Rebuilt dataset (overwritten old results).
+dF/F definition: F0 = cumulative minimum of prior timepoints (literature).
+Source MAT: C:\Users\ASUS\Documents\Hydra\Hydra_download_videos\mechanosensory\elife-64108-fig2-data1-v2.mat
+Trials: 18
+Segments: 3362
+Rows: 1738154
+fs: 16.67
+segment_sec: 31.0, pre_sec: 1.0
+smoothing: True, sg_order: 3, sg_frame: 11
+Example segment IDs: [613, 614, 1, 2]
