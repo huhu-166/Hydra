@@ -1,0 +1,34 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+~$*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Large datasets / binary artifacts
+*.zip
+*.h5
+*.hdf5
+*.tif
+*.tiff
+*.avi
+*.mp4
+*.npy
+*.npz
+*.mat
+*.pkl
+*.pickle
+*.csv
+
+# Keep repository focused on code/docs
+hydramuscle-master/
+Hydra_data_analysis/
+Hydra_data_modeled_Ca/
+Hydra_behavior_Han2018/
+read_h5data/
+pic/
