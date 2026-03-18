@@ -1,0 +1,42 @@
+{
+  "seed": 7,
+  "n_neurons": 174,
+  "n_edges": 470,
+  "group_counts": {
+    "B1": 40,
+    "B2": 60,
+    "H": 22,
+    "P": 52
+  },
+  "region_counts": {
+    "column": 100,
+    "hypostome": 22,
+    "peduncle": 52
+  },
+  "edge_type_counts": {
+    "feedback": 24,
+    "feedforward": 95,
+    "intra": 351
+  },
+  "pair_counts": {
+    "B1->B1": 35,
+    "B1->B2": 29,
+    "B1->H": 1,
+    "B1->P": 21,
+    "B2->B1": 15,
+    "B2->B2": 116,
+    "B2->P": 8,
+    "H->B1": 19,
+    "H->H": 30,
+    "P->B2": 26,
+    "P->P": 170
+  },
+  "delay_counts_ms": {
+    "1": 120,
+    "2": 204,
+    "3": 123,
+    "4": 23
+  },
+  "mean_out_degree": 2.9746835443037973,
+  "mean_in_degree": 3.1125827814569536
+}

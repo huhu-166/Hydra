@@ -1,0 +1,30 @@
+{
+  "backend": "genn_gpu",
+  "n_neurons": 174,
+  "n_edges": 470,
+  "n_synapse_groups": 38,
+  "runtime_ms": 4000.0,
+  "spike_count": 31780,
+  "active_neurons": 135,
+  "group_total_counts": {
+    "B1": 40,
+    "B2": 60,
+    "H": 22,
+    "P": 52
+  },
+  "group_active_counts": {
+    "B1": 39,
+    "B2": 36,
+    "H": 11,
+    "P": 49
+  },
+  "mean_rate_hz": 45.660919540229884,
+  "h_first_spike_ms": 2.32,
+  "b1_first_spike_ms": 18.58,
+  "b2_first_spike_ms": 49.1,
+  "p_first_spike_ms": 18.8,
+  "detected_burst_count": 1,
+  "burst_centers_ms": [
+    325.0
+  ]
+}
