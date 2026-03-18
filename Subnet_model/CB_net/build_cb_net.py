@@ -66,15 +66,15 @@ GROUP_SPECS = {
 
 CONNECTION_RULES = {
     ("H", "H"): {"prob": 0.2, "weight": 0.92, "edge_type": "intra"},
-    ("B1", "B1"): {"prob": 0.15, "weight": 0.94, "edge_type": "intra"},
-    ("B2", "B2"): {"prob": 0.26, "weight": 1.02, "edge_type": "intra"},
-    ("P", "P"): {"prob": 0.260, "weight": 1.28, "edge_type": "intra"},
+    ("B1", "B1"): {"prob": 0.12, "weight": 0.92, "edge_type": "intra"},
+    ("B2", "B2"): {"prob": 0.14, "weight": 0.90, "edge_type": "intra"},
+    ("P", "P"): {"prob": 0.22, "weight": 1.22, "edge_type": "intra"},
     ("H", "B1"): {"prob": 0.28, "weight": 1.10, "edge_type": "feedforward"},
-    ("B1", "B2"): {"prob": 0.007, "weight": 0.88, "edge_type": "feedback"},
+    ("B1", "B2"): {"prob": 0.22, "weight": 1.10, "edge_type": "feedforward"},
     ("B2", "P"): {"prob": 0.03, "weight": 0.96, "edge_type": "feedback"},
     ("H", "P"): {"prob": 0.001, "weight": 0.90, "edge_type": "long_range"},
-    ("B1", "P"): {"prob": 0.28, "weight": 1.05, "edge_type": "feedforward"},
-    ("P", "B2"): {"prob": 0.30, "weight": 0.90, "edge_type": "feedforward"},
+    ("B1", "P"): {"prob": 0.28, "weight": 1.08, "edge_type": "feedforward"},
+    ("P", "B2"): {"prob": 0.40, "weight": 1.08, "edge_type": "feedforward"},
     ("B2", "B1"): {"prob": 0.028, "weight": 0.55, "edge_type": "feedback"},
     ("P", "H"): {"prob": 0.010, "weight": 0.50, "edge_type": "feedback"},
     ("B1", "H"): {"prob": 0.008, "weight": 0.55, "edge_type": "feedback"},
@@ -106,13 +106,9 @@ def planar_distance(a: Node, b: Node) -> float:
 
 
 def delay_from_distance(distance_value: float) -> int:
-    if distance_value < 4.0:
+    if distance_value < 6.0:
         return 1
-    if distance_value < 10.0:
-        return 2
-    if distance_value < 20.0:
-        return 3
-    return 4
+    return 2
 
 
 def sample_positions(rng: np.random.Generator) -> list[Node]:
@@ -193,13 +189,15 @@ def build_edges(nodes: list[Node], rng: np.random.Generator) -> list[dict]:
             lam = LOCAL_LENGTH_SCALE[source.group]
             return math.exp(-planar_distance(source, target) / lam)
         if {source.group, target.group} <= {"B1", "B2"}:
-            return math.exp(-planar_distance(source, target) / 9.5)
+            if source.group == "B1" and target.group == "B2":
+                return math.exp(-planar_distance(source, target) / 6.2)
+            return math.exp(-planar_distance(source, target) / 8.0)
         if {source.group, target.group} <= {"B2", "P"}:
             if source.group == "P" and target.group == "B2":
-                return math.exp(-planar_distance(source, target) / 4.8)
-            return math.exp(-planar_distance(source, target) / 7.2)
+                return math.exp(-planar_distance(source, target) / 5.4)
+            return math.exp(-planar_distance(source, target) / 6.5)
         if source.group == "B1" and target.group == "P":
-            return math.exp(-planar_distance(source, target) / 5.2)
+            return math.exp(-planar_distance(source, target) / 5.0)
         if {source.group, target.group} <= {"H", "B1"}:
             return math.exp(-planar_distance(source, target) / 8.8)
         return math.exp(-planar_distance(source, target) / 6.5)
@@ -210,15 +208,20 @@ def build_edges(nodes: list[Node], rng: np.random.Generator) -> list[dict]:
         key = (source.node_id, target.node_id)
         if key in seen:
             return
-        if source.group == "B1" and target.group == "P":
-            if planar_distance(source, target) > 16.0:
+        if source.group == "B1" and target.group == "B2":
+            if planar_distance(source, target) > 17.0:
                 return
             if abs(source.y - target.y) > 15.0:
                 return
-        if source.group == "P" and target.group == "B2":
-            if planar_distance(source, target) > 12.0:
+        if source.group == "B1" and target.group == "P":
+            if planar_distance(source, target) > 15.0:
                 return
-            if abs(source.y - target.y) > 10.0:
+            if abs(source.y - target.y) > 13.0:
+                return
+        if source.group == "P" and target.group == "B2":
+            if planar_distance(source, target) > 13.0:
+                return
+            if abs(source.y - target.y) > 10.5:
                 return
         probability = rule["prob"] * distance_factor(source, target)
         probability = min(1.0, probability)

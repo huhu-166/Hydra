@@ -58,29 +58,31 @@ V3 = 2.0 * mV
 V4 = 30.0 * mV
 TAU_W0 = 12.0 * ms
 
+
+
 GROUP_SCALES = {
     "H": {"exc": 1.06, "rec": 0.2, "coupling": 0.76},
-    "B1": {"exc": 1.14, "rec": 0.2, "coupling": 1.04},
-    "B2": {"exc": 1.12, "rec": 0.2, "coupling": 1.04},
-    "P": {"exc": 1.125, "rec": 0.17, "coupling": 1.04},
+    "B1": {"exc": 1.13, "rec": 0.18, "coupling": 1.04},
+    "B2": {"exc": 1.11, "rec": 0.18, "coupling": 1.12},
+    "P": {"exc": 1.125, "rec": 0.18, "coupling": 1.12},
 }
 
 EDGE_TYPE_GAP = {
-    "intra": 0.18 * nS,
-    "feedforward": 0.9 * nS,
-    "feedback": 0.14 * nS,
+    "intra": 0.15 * nS,
+    "feedforward": 1.24 * nS,
+    "feedback": 0.18 * nS,
     "long_range": 0.05 * nS,
 }
 
 PAIR_SCALE = {
     ("H", "B1"): 3,
     ("H", "P"): 0.08,
-    ("B1", "P"): 5.0,
-    ("P", "P"): 3.6,
-    ("P", "B2"): 5.0,
-    ("B1", "B2"): 0.18,
-    ("B2", "P"): 0.18,
-    ("B2", "B2"): 3.6,
+    ("B1", "P"): 5.2,
+    ("P", "P"): 2.8,
+    ("P", "B2"): 8.8,
+    ("B1", "B2"): 3.6,
+    ("B2", "P"): 0.8,
+    ("B2", "B2"): 1.9,
 }
 
 
@@ -113,7 +115,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--trace-count-per-layer", type=int, default=3)
     parser.add_argument("--calcium-bin-ms", type=float, default=50.0)
     parser.add_argument("--calcium-tau-ms", type=float, default=300.0)
-    parser.add_argument("--stim-amp-na", type=float, default=0.42)
+    parser.add_argument("--stim-amp-na", type=float, default=0.50)
     parser.add_argument("--stim-on-ms", type=float, default=0.0)
     parser.add_argument("--stim-off-ms", type=float, default=40.0)
     parser.add_argument("--stim-count", type=int, default=3)
@@ -248,19 +250,20 @@ def build_network(
 
     for idx, row in nodes.iterrows():
         scales = GROUP_SCALES[row["group"]]
-        exc_noise = rng.uniform(0.96, 1.04)
-        rec_noise = rng.uniform(0.96, 1.04)
+        exc_noise = rng.uniform(0.99, 1.01)
+        rec_noise = rng.uniform(0.99, 1.01)
         gNa_vals[idx] = float((G_NA0 * scales["exc"] * exc_noise) / siemens)
-        gL_vals[idx] = float((G_L0 * (2.0 - scales["exc"]) * rng.uniform(0.98, 1.04)) / siemens)
-        gK_vals[idx] = float((G_K0 * rng.uniform(0.97, 1.03)) / siemens)
+        gL_vals[idx] = float((G_L0 * (2.0 - scales["exc"]) * rng.uniform(0.99, 1.01)) / siemens)
+        gK_vals[idx] = float((G_K0 * rng.uniform(0.99, 1.01)) / siemens)
         c_vals[idx] = float(C0 / pF)
         phi_vals[idx] = PHI0 * scales["rec"] * rec_noise
         tau_w_vals[idx] = float(TAU_W0 / ms)
         bias_scale = scales["exc"]
-        
-        bias_vals[idx] = float((0.12 * nA * bias_scale * rng.uniform(0.94, 1.06)) / nA)
-        coupling_out[idx] = scales["coupling"] * rng.uniform(0.94, 1.06)
-        coupling_in[idx] = scales["coupling"] * rng.uniform(0.94, 1.06)
+        if row["group"] == "B2":
+            bias_scale *= 1.04
+        bias_vals[idx] = float((0.12 * nA * bias_scale * rng.uniform(0.98, 1.02)) / nA)
+        coupling_out[idx] = scales["coupling"] * rng.uniform(0.98, 1.02)
+        coupling_in[idx] = scales["coupling"] * rng.uniform(0.98, 1.02)
 
     stim_ids = select_stimulus_ids(nodes, stim_count=stim_count)
     if len(stim_ids):
@@ -275,11 +278,11 @@ def build_network(
     G.tau_w_base = tau_w_vals * ms
     G.I_bias = bias_vals * nA
     G.stim_amp = stim_amp_vals * nA
-    initial_v_mv = -52.0 + rng.normal(0.0, 3.0, len(nodes))
-    initial_w = np.clip(rng.normal(0.18, 0.03, len(nodes)), 0.0, 1.0)
+    initial_v_mv = -52.0 + rng.normal(0.0, 1.0, len(nodes))
+    initial_w = np.clip(rng.normal(0.18, 0.015, len(nodes)), 0.0, 1.0)
     b2_mask = nodes["group"].to_numpy() == "B2"
-    initial_v_mv[b2_mask] = -55.3 + rng.normal(0.0, 1.2, int(b2_mask.sum()))
-    initial_w[b2_mask] = np.clip(rng.normal(0.22, 0.02, int(b2_mask.sum())), 0.0, 1.0)
+    initial_v_mv[b2_mask] = -54.4 + rng.normal(0.0, 0.75, int(b2_mask.sum()))
+    initial_w[b2_mask] = np.clip(rng.normal(0.198, 0.012, int(b2_mask.sum())), 0.0, 1.0)
     G.V = initial_v_mv * mV
     G.W = initial_w
     G.I_gap = 0.0 * nA
@@ -334,6 +337,38 @@ def build_calcium_proxy(spike_times_ms: np.ndarray, runtime_ms: float, bin_ms: f
     kernel /= kernel.sum()
     calcium_proxy = np.convolve(counts.astype(float), kernel, mode="full")[: len(counts)]
     return pd.DataFrame({"time_ms": times, "spike_rate_hz": spike_rate_hz, "calcium_proxy": calcium_proxy})
+
+
+def build_group_calcium_proxy(
+    spikes: pd.DataFrame,
+    nodes: pd.DataFrame,
+    runtime_ms: float,
+    bin_ms: float,
+    tau_ms: float,
+    groups: tuple[str, ...] = ("B1", "B2", "P"),
+) -> pd.DataFrame:
+    base_times = build_calcium_proxy(
+        spike_times_ms=np.array([], dtype=float),
+        runtime_ms=runtime_ms,
+        bin_ms=bin_ms,
+        tau_ms=tau_ms,
+        n_neurons=1,
+    )[["time_ms"]].copy()
+
+    for group in groups:
+        ids = set(nodes.loc[nodes["group"] == group, "node_id"].astype(int))
+        group_spikes = spikes.loc[spikes["neuron_index"].isin(ids), "spike_time_ms"].to_numpy(dtype=float)
+        group_df = build_calcium_proxy(
+            spike_times_ms=group_spikes,
+            runtime_ms=runtime_ms,
+            bin_ms=bin_ms,
+            tau_ms=tau_ms,
+            n_neurons=max(1, len(ids)),
+        )
+        base_times[f"{group}_spike_rate_hz"] = group_df["spike_rate_hz"].to_numpy(dtype=float)
+        base_times[f"{group}_calcium_proxy"] = group_df["calcium_proxy"].to_numpy(dtype=float)
+
+    return base_times
 
 
 def detect_bursts(calcium_df: pd.DataFrame) -> list[float]:
@@ -418,6 +453,15 @@ def save_outputs(
     )
     calcium_df.to_csv(output_dir / "network_calcium_proxy.csv", index=False)
 
+    group_calcium_df = build_group_calcium_proxy(
+        spikes=spikes,
+        nodes=nodes,
+        runtime_ms=summary.runtime_ms,
+        bin_ms=calcium_bin_ms,
+        tau_ms=calcium_tau_ms,
+    )
+    group_calcium_df.to_csv(output_dir / "group_calcium_proxy_b1_b2_p.csv", index=False)
+
     sample_df = nodes.loc[nodes["node_id"].isin(sample_ids), ["node_id", "group", "region", "x", "y"]].copy()
     sample_df["stimulated"] = sample_df["node_id"].isin(stim_ids)
     sample_df.to_csv(output_dir / "sample_trace_neurons.csv", index=False)
@@ -483,6 +527,23 @@ def save_outputs(
     ax.set_title("Population firing rate")
     fig.tight_layout()
     fig.savefig(output_dir / "population_rate.png", dpi=180)
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(11, 4))
+    for group in ("B1", "B2", "P"):
+        ax.plot(
+            group_calcium_df["time_ms"] / 1000.0,
+            group_calcium_df[f"{group}_calcium_proxy"],
+            linewidth=2.0,
+            color=group_palette[group],
+            label=group,
+        )
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Group Ca proxy")
+    ax.set_title("B1 / B2 / P calcium proxy")
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(output_dir / "group_calcium_proxy_b1_b2_p.png", dpi=180)
     plt.close(fig)
 
 
